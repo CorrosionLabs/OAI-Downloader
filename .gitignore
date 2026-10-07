@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+.web/
+.secrets/
+web-test-*.log
+desktop.ini
+.vscode/

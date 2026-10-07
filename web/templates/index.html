@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ translations['app.meta_description'] }}">
+    <title>OAI-Downloader</title>
+    <link rel="icon" type="image/svg+xml" href="/static/corrosion-labs-icon.svg">
+    <link rel="stylesheet" href="/static/css/app.css?v=5">
+    <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+    <div id="ui-text" data-messages='{{ translations | tojson }}' hidden></div>
+    <header class="site-header">
+        <div class="site-header-content">
+        <div class="brand">
+            <img class="brand-logo" src="/static/img/corrosion-labs-logo.svg" alt="Corrosion Labs">
+            <div class="brand-copy">
+                <span class="brand-product">OAI-Downloader</span>
+                <small class="brand-subtitle">ChatGPT Backup download</small>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <nav class="main-nav" aria-label="{{ translations['nav.aria_label'] }}">
+                <a href="#sistema" data-module-target="sistema" aria-current="page">{{ translations['nav.system'] }}</a>
+                <a href="#backup" data-module-target="backup">{{ translations['nav.backup'] }}</a>
+                <a href="#inventario" data-module-target="inventario">{{ translations['nav.inventory'] }}</a>
+                <a href="#descarga" data-module-target="descarga">{{ 'Descarga' if language == 'es' else 'Download' }}</a>
+                <a href="#limpieza" data-module-target="limpieza">{{ translations['nav.cleanup'] }}</a>
+            </nav>
+
+            <button id="live-help-toggle" class="live-help-toggle" type="button" aria-pressed="false"
+                aria-label="{{ translations['help.live_help_toggle'] }}">?</button>
+            <div class="language-menu">
+                <button id="language-menu-toggle" class="language-menu-toggle" type="button"
+                    aria-expanded="false" aria-controls="language-menu-options"
+                    aria-label="{{ translations['language.select'] }}">{{ translations['language.name'] }}</button>
+                <div id="language-menu-options" class="language-menu-options" hidden>
+                    {% for option in languages %}
+                    <a href="/?lang={{ option.code }}" hreflang="{{ option.code }}"
+                        {% if option.code == language %}aria-current="true"{% endif %}>{{ option.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <button id="about-logo" class="about-logo" type="button" aria-label="{{ translations['about.open'] }}">
+                <img src="/static/img/corrosion-labs-icon.svg" alt="">
+            </button>
+        </div>
+        </div>
+    </header>
+
+    <div id="about-modal" class="modal" hidden>
+        <div class="modal-backdrop" data-about-close></div>
+        <section class="modal-dialog about-modal-dialog" role="dialog" aria-modal="true"
+            aria-labelledby="about-modal-title" aria-describedby="about-modal-description">
+            <div class="about-modal-layout">
+                <div class="about-modal-visual">
+                    <img class="about-modal-logo" src="/static/img/corrosion-labs-logo.svg" alt="Corrosion Labs">
+                </div>
+                <div class="about-modal-content">
+                    <header class="about-modal-header">
+                        <div>
+                            <h2 id="about-modal-title">OAI-Downloader</h2>
+                            <p>{{ translations['about.version'] }} {{ version }}</p>
+                        </div>
+                        <button id="about-close" class="about-close" type="button" aria-label="{{ translations['about.close'] }}">×</button>
+                    </header>
+                    <p id="about-modal-description">{{ translations['about.description'] }}</p>
+                    <p class="about-modal-lab">Corrosion Labs</p>
+                    {% if about.license %}
+                    <p><strong>{{ translations['about.license'] }}</strong> {{ about.license }}</p>
+                    {% endif %}
+                    {% if about.website %}
+                    <p><a href="{{ about.website }}" target="_blank" rel="noopener noreferrer">{{ translations['about.website'] }}</a></p>
+                    {% endif %}
+                    {% if about.repository %}
+                    <p><a href="{{ about.repository }}" target="_blank" rel="noopener noreferrer">{{ translations['about.repository'] }}</a></p>
+                    {% endif %}
+                    {% if about.release_api_url %}
+                    <div class="about-updates">
+                        <button id="check-updates" type="button">{{ translations['about.check_updates'] }}</button>
+                        <p id="update-check-result" role="status" aria-live="polite" hidden></p>
+                        <a id="view-update" href="#" target="_blank" rel="noopener noreferrer" hidden>{{ translations['about.view_update'] }}</a>
+                    </div>
+                    {% endif %}
+                    {% if about.contact %}
+                    <p><strong>{{ translations['about.contact'] }}</strong> {{ about.contact }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <main>
+        <p id="app-notice" class="form-feedback" role="status" hidden></p>
+
+        <div class="section-grid">
+            <section
+                id="backup"
+                class="panel module-panel"
+                hidden
+            >
+                <h2>{{ translations['backup.title'] }}</h2>
+                <button class="primary-action section-next-action" type="button" data-next-from="backup" data-next-target="inventario" data-help="{{ translations['help.next'] }}" disabled>
+                    {{ 'Siguiente' if language == 'es' else 'Next' }}
+                </button>
+                <p class="panel-summary">{{ translations['backup.summary'] }}</p>
+                <progress id="backup-total-bar" class="module-process-progress" value="0" max="1" aria-label="{{ 'Progreso del análisis' if language == 'es' else 'Analysis progress' }}"></progress>
+                <p id="backup-status" class="status" data-state="pending" aria-live="polite">
+                    <span>{{ translations['common.status'] }}</span>
+                    <strong>
+                        <span id="backup-progress-word">{{ translations['common.pending'] }}</span>
+                        <span id="backup-progress-detail" class="progress-detail"></span>
+                    </strong>
+                </p>
+                <div class="analysis-controls">
+                    <button id="analyze-account" class="primary-action module-primary-action" type="button" data-help="{{ translations['help.analysis_refresh'] }}">
+                        {{ translations['backup.analyze_account'] }}
+                    </button>
+                    <label class="analysis-request-delay" for="analysis-request-delay" data-help="{{ translations['help.analysis_request_delay'] }}">
+                        {{ translations['backup.request_delay'] }}
+                        <input id="analysis-request-delay" type="number" value="0.5" min="0" step="0.1" required>
+                    </label>
+                </div>
+
+                <div id="backup-results" hidden>
+                    <div class="backup-summary">
+                        <div class="backup-metric">
+                            <span>{{ translations['backup.total_projects'] }}</span>
+                            <strong id="backup-total-projects">0</strong>
+                        </div>
+                        <div class="backup-metric">
+                            <span>{{ translations['backup.total_conversations'] }}</span>
+                            <strong id="backup-total-conversations">0</strong>
+                        </div>
+                    </div>
+
+                    <div id="analysis-scope-options">
+                        <div><label data-help="{{ translations['help.scope_all'] }}"><input id="analysis-select-all" type="checkbox"> {{ 'Descargar todo' if language == 'es' else 'Download all' }}</label></div>
+                    </div>
+                    <p
+                        id="analysis-scope-status"
+                        class="analysis-scope-status"
+                        data-empty-label="{{ 'Sin selección' if language == 'es' else 'No selection' }}"
+                        data-root-label="{{ 'Solo raíz' if language == 'es' else 'Root only' }}"
+                        data-projects-label="{{ 'proyectos seleccionados' if language == 'es' else 'projects selected' }}"
+                        data-projects-root-label="{{ 'proyectos + raíz seleccionados' if language == 'es' else 'projects + root selected' }}"
+                        data-conversations-label="{{ 'conversaciones' if language == 'es' else 'conversations' }}"
+                        aria-live="polite"
+                    >
+                        <span id="analysis-scope-summary"></span>
+                        <span class="analysis-scope-totals">
+                            <strong id="analysis-scope-conversations">0</strong> <span id="analysis-scope-conversations-label"></span>
+                        </span>
+                    </p>
+                    <dl
+                        id="backup-project-list"
+                        class="system-details"
+                        data-root-label="{{ 'Raíz' if language == 'es' else 'Root' }}"
+                        data-help="{{ translations['help.scope_projects'] }}"
+                    ></dl>
+
+                </div>
+            </section>
+
+            <section
+                id="inventario"
+                class="panel module-panel"
+                hidden
+            >
+                <h2>{{ translations['inventory.title'] }}</h2>
+                <button class="primary-action section-next-action" type="button" data-next-from="inventario" data-next-target="descarga" data-help="{{ translations['help.next'] }}" disabled>
+                    {{ 'Siguiente' if language == 'es' else 'Next' }}
+                </button>
+                <p class="panel-summary">{{ translations['inventory.summary'] }}</p>
+                <progress id="inventory-total-bar" class="module-process-progress" value="0" max="1" aria-label="{{ 'Progreso del inventario' if language == 'es' else 'Inventory progress' }}"></progress>
+                <p id="inventory-status" class="status" data-state="pending" aria-live="polite">
+                    <span>{{ translations['common.status'] }}</span>
+                    <strong>
+                        <span id="inventory-progress-word">{{ translations['common.pending'] }}</span>
+                        <span id="inventory-progress-detail" class="progress-detail"></span>
+                    </strong>
+                </p>
+
+                <button id="generate-inventory" class="primary-action module-primary-action" type="button" data-help="{{ translations['help.inventory_generate'] }}">
+                    {{ translations['inventory.generate'] }}
+                </button>
+                <button id="recover-inventory" class="primary-action module-primary-action" type="button" hidden>
+                    {{ translations['inventory.recover'] }}
+                </button>
+                <button id="diagnose-inventory" type="button" hidden>
+                    {{ translations['inventory.diagnose'] }}
+                </button>
+                <button id="diagnose-downloads" class="primary-action module-primary-action diagnostic-action" type="button" hidden>
+                    {{ 'Diagnosticar fallos de descarga' if language == 'es' else 'Diagnose download failures' }}
+                </button>
+                <div id="download-diagnostics" hidden aria-live="polite" data-root-label="{{ 'Raíz' if language == 'es' else 'Root' }}">
+                    <p>HTTP 401: <strong id="download-diagnosis-401">0</strong></p>
+                    <p>HTTP 403: <strong id="download-diagnosis-403">0</strong></p>
+                    <p>HTTP 404: <strong id="download-diagnosis-404">0</strong></p>
+                    <p>HTTP 429: <strong id="download-diagnosis-429">0</strong></p>
+                    <p>{{ 'Timeout / error de red' if language == 'es' else 'Timeout / network error' }}: <strong id="download-diagnosis-network">0</strong></p>
+                    <p>{{ 'Otros' if language == 'es' else 'Other' }}: <strong id="download-diagnosis-other">0</strong></p>
+                    <p>{{ 'Total de fallos' if language == 'es' else 'Total failures' }}: <strong id="download-diagnosis-total">0</strong></p>
+                    <ul id="download-diagnosis-files"></ul>
+                </div>
+                <div id="inventory-diagnostics" hidden aria-live="polite">
+                    <p>{{ translations['inventory.diagnosis.unreadable'] }}: <strong id="diagnosis-unreadable">0</strong></p>
+                    <p>{{ translations['inventory.diagnosis.not_object'] }}: <strong id="diagnosis-not_object">0</strong></p>
+                    <p>{{ translations['inventory.diagnosis.invalid_mapping'] }}: <strong id="diagnosis-invalid_mapping">0</strong></p>
+                    <p>{{ translations['inventory.diagnosis.total'] }}: <strong id="diagnosis-total">0</strong></p>
+                    <ul id="diagnosis-files"></ul>
+                </div>
+
+                <div id="inventory-results" class="inventory-results" hidden>
+                    <section class="inventory-result-block" aria-live="polite">
+                        <h3>{{ 'Inventario detectado' if language == 'es' else 'Detected inventory' }}</h3>
+                        <p class="inventory-summary">
+                            <span><strong id="inventory-conversations">0</strong> {{ 'conversaciones' if language == 'es' else 'conversations' }}</span>
+                            <span><strong id="inventory-total-references">0</strong> {{ 'referencias' if language == 'es' else 'references' }}</span>
+                            <span><strong id="inventory-unique-resources">0</strong> {{ 'recursos' if language == 'es' else 'resources' }}</span>
+                        </p>
+                    </section>
+                    <section class="inventory-result-block">
+                        <h3>{{ 'Ya indexado' if language == 'es' else 'Already indexed' }}</h3>
+                        <p class="inventory-summary">
+                            <span><strong id="inventory-indexed-conversations">0</strong> {{ 'conversaciones' if language == 'es' else 'conversations' }}</span>
+                            <span><strong id="inventory-indexed-resources">0</strong> {{ 'recursos' if language == 'es' else 'resources' }}</span>
+                        </p>
+                    </section>
+                    <section class="inventory-result-block">
+                        <h3>{{ 'Nuevos' if language == 'es' else 'New' }}</h3>
+                        <p class="inventory-summary">
+                            <span><strong id="inventory-new-conversations">0</strong> {{ 'conversaciones' if language == 'es' else 'conversations' }}</span>
+                            <span><strong id="inventory-new-resources">0</strong> {{ 'recursos' if language == 'es' else 'resources' }}</span>
+                        </p>
+                    </section>
+                    <section class="inventory-result-block">
+                        <h3>{{ 'Estado de descarga' if language == 'es' else 'Download status' }}</h3>
+                        <p class="inventory-summary">
+                            <span>{{ 'Pendientes de descarga' if language == 'es' else 'Pending downloads' }}: <strong id="inventory-pending-downloads">0</strong></span>
+                            <span>{{ 'Fallidos' if language == 'es' else 'Failed' }}: <strong id="inventory-failed-downloads">0</strong></span>
+                        </p>
+                    </section>
+                </div>
+            </section>
+
+            <section id="descarga" class="panel module-panel" hidden>
+                <h2>{{ 'Descarga' if language == 'es' else 'Download' }}</h2>
+                <p class="panel-summary">{{ translations['download.summary'] }}</p>
+                <div class="download-control-stack">
+                    <label class="download-toggle download-safe-toggle">
+                        <input id="download-safe-mode" type="checkbox" checked>
+                        <span>{{ translations['download.safe_mode'] }}</span>
+                    </label>
+                    <div id="download-advanced-controls" class="download-advanced-controls" hidden>
+                        <div id="download-mode" data-help="{{ translations['help.download_mode'] }}">
+                            <label class="download-toggle" data-help="{{ translations['help.download_optimal'] }}">
+                                <input type="radio" name="download-mode" value="optimal" checked>
+                                <span>{{ 'Óptimo' if language == 'es' else 'Optimal' }}</span>
+                            </label>
+                            <label class="download-toggle" data-help="{{ translations['help.download_manual'] }}">
+                                <input type="radio" name="download-mode" value="manual">
+                                <span>Manual</span>
+                            </label>
+                        </div>
+                        <label class="download-toggle">
+                            <input id="download-auto-safe-mode" type="checkbox" checked>
+                            <span>{{ translations['download.auto_safe_mode'] }}</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="download-settings" class="download-settings">
+                    <label class="download-field" for="download-workers">
+                        {{ 'Hilos' if language == 'es' else 'Threads' }}
+                        <input id="download-workers" type="number" value="1" min="1" step="1" required disabled data-help="{{ translations['help.download_workers'] }}">
+                    </label>
+                    <label class="download-field" for="download-delay">
+                        {{ 'Espera entre recursos (s)' if language == 'es' else 'Wait between resources (s)' }}
+                        <input id="download-delay" type="number" value="2.0" min="0" step="any" required disabled data-help="{{ translations['help.download_delay'] }}">
+                    </label>
+                </div>
+                <p
+                    id="optimal-download-settings"
+                    class="optimal-download-settings"
+                    aria-live="polite"
+                ></p>
+                <p class="panel-summary" hidden>{{ translations['download.workers_note'] }}</p>
+                <button id="download-resources" class="primary-action module-primary-action" type="button" data-help="{{ translations['help.download_start'] }}">
+                    {{ 'Descargar' if language == 'es' else 'Download' }}
+                </button>
+                <button id="stop-download" class="primary-action module-primary-action cleanup-action" type="button" hidden>{{ translations['download.stop'] }}</button>
+                <p id="download-status" class="status" data-state="pending" aria-live="polite">
+                    <span>{{ translations['common.status'] }}</span>
+                    <strong><span id="download-progress-word">{{ translations['common.pending'] }}</span></strong>
+                </p>
+                <dl id="download-current-status" class="system-details" aria-live="polite">
+                    <div><dt>{{ translations['download.project'] }}</dt><dd id="download-project">—</dd></div>
+                    <div><dt>{{ translations['download.resource'] }}</dt><dd id="download-resource">—</dd></div>
+                    <div><dt>{{ translations['download.progress'] }}</dt><dd id="download-progress">0 / 0</dd></div>
+                </dl>
+                <section id="download-total-progress" class="process-progress" hidden aria-live="polite" data-help="{{ translations['help.download_progress'] }}">
+                    <h3>{{ 'Progreso total' if language == 'es' else 'Total progress' }}</h3>
+                    <p><strong id="download-total-count">0 / 0</strong> {{ 'recursos' if language == 'es' else 'resources' }}</p>
+                    <progress id="download-total-bar" aria-label="Total download progress"></progress>
+                </section>
+                <ul id="download-worker-list" aria-live="polite"
+                    data-unavailable-label="{{ 'No disponibles' if language == 'es' else 'Unavailable' }}"
+                    data-completed-with-incidents="{{ 'Completado con incidencias' if language == 'es' else 'Completed with issues' }}"></ul>
+                <div id="download-results" hidden aria-live="polite">
+                    <p>{{ translations['download.downloaded'] }}: <strong id="download-downloaded">0</strong></p>
+                    <p>{{ translations['backup.skipped'] }}: <strong id="download-skipped">0</strong></p>
+                    <p>{{ 'No disponibles' if language == 'es' else 'Unavailable' }}: <strong id="download-unavailable">0</strong></p>
+                    <p>{{ translations['download.failed'] }}: <strong id="download-failed">0</strong></p>
+                </div>
+            </section>
+
+            <section id="limpieza" class="panel module-panel" hidden>
+                <h2>{{ translations['cleanup.title'] }}</h2>
+                <p class="panel-summary">{{ translations['cleanup.summary'] }}</p>
+                <button id="clear-local-data" class="primary-action module-primary-action cleanup-action" type="button" data-help="{{ translations['help.cleanup_start'] }}">
+                    {{ translations['cleanup.clear_local_data'] }}
+                </button>
+            </section>
+
+            <div id="cleanup-modal" class="modal" hidden>
+                <div class="modal-backdrop" data-cleanup-close></div>
+                <section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cleanup-modal-title" aria-describedby="cleanup-modal-description">
+                    <h2 id="cleanup-modal-title">{{ translations['cleanup.clear_local_data'] }}</h2>
+                    <p id="cleanup-modal-description">{{ translations['cleanup.modal_description'] }}</p>
+                    <p class="modal-warning">{{ translations['cleanup.modal_warning'] }}</p>
+                    <p class="modal-preserved">{{ translations['cleanup.modal_preserved'] }}</p>
+                    <label class="cleanup-downloads-option" data-help="{{ translations['help.cleanup_downloads'] }}">
+                        <input id="cleanup-include-downloads" type="checkbox">
+                        {{ translations['cleanup.include_downloads'] }}
+                    </label>
+                    <p class="cleanup-confirmation">{{ translations['cleanup.confirm_hold'] }}</p>
+                    <progress id="cleanup-confirm-progress" max="4000" value="0" aria-label="{{ translations['cleanup.confirm_progress'] }}"></progress>
+                    <div class="modal-actions">
+                        <button id="cleanup-cancel" type="button">{{ translations['common.cancel'] }}</button>
+                    </div>
+                </section>
+            </div>
+
+            <section
+                id="sistema"
+                class="panel module-panel"
+            >
+                <h2>{{ translations['system.title'] }}</h2>
+                <p class="panel-summary">{{ translations['system.summary'] }}</p>
+                <button class="primary-action section-next-action" type="button" data-next-from="sistema" data-next-target="backup" data-help="{{ translations['help.next'] }}" disabled>
+                    {{ 'Siguiente' if language == 'es' else 'Next' }}
+                </button>
+
+                <dl class="system-details" aria-live="polite">
+                    <div>
+                        <dt>{{ translations['system.status'] }}</dt>
+                        <dd id="system-status" data-state="pending" data-help="{{ translations['help.system_status'] }}">{{ translations['system.unchecked'] }}</dd>
+                    </div>
+                    <div id="system-user-row" hidden>
+                        <dt>{{ translations['system.user'] }}</dt>
+                        <dd id="system-user">—</dd>
+                    </div>
+                    <div id="system-email-row" hidden>
+                        <dt>{{ translations['system.email'] }}</dt>
+                        <dd id="system-email">—</dd>
+                    </div>
+                    <div>
+                        <dt>{{ translations['system.storage_folder'] }}</dt>
+                        <dd class="storage-setting">
+                            <span id="storage-root">{{ translations['system.storage_not_configured'] }}</span>
+                            <button id="change-storage-root" class="primary-action" type="button" data-help="{{ translations['help.system_storage'] }}">
+                                {{ translations['system.storage_change'] }}
+                            </button>
+                        </dd>
+                    </div>
+                </dl>
+
+                <div id="connection-action" class="connection-action" hidden>
+                    <button id="check-connection" class="primary-action" type="button" data-help="{{ translations['help.system_status'] }}">
+                        {{ translations['system.check_connection'] }}
+                    </button>
+                    <button id="connect-chatgpt" class="primary-action" type="button" data-help="{{ translations['help.system_connect'] }}">
+                        {{ translations['system.connect_chatgpt'] }}
+                    </button>
+                    <a id="manual-connection" class="manual-link" href="#manual-cookie">
+                        {{ translations['system.manual_connection'] }}
+                    </a>
+                </div>
+
+                <div id="manual-cookie" class="connection-setup" hidden>
+                    <div class="setup-heading">
+                        <h3>{{ translations['system.cookie_instructions'] }}</h3>
+                        <a
+                            class="secondary-link"
+                            href="https://chatgpt.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >{{ translations['system.open_chatgpt'] }}</a>
+                    </div>
+
+                    <p class="manual-help">{{ translations['system.manual_connection_help'] }}</p>
+
+                    <ol class="cookie-guide">
+                        <li>{{ translations['system.cookie_step_1'] }}</li>
+                        <li>{{ translations['system.cookie_step_2'] }}</li>
+                        <li>{{ translations['system.cookie_step_3'] }}</li>
+                        <li>{{ translations['system.cookie_step_4'] }}</li>
+                        <li>{{ translations['system.cookie_step_5'] }}</li>
+                        <li>{{ translations['system.cookie_step_6'] }}</li>
+                        <li>{{ translations['system.cookie_step_7'] }}</li>
+                        <li>{{ translations['system.cookie_step_8'] }}</li>
+                    </ol>
+
+                    <label class="cookie-field" for="cookie-input">
+                        <span>{{ translations['system.cookie_label'] }}</span>
+                        <textarea
+                            id="cookie-input"
+                            rows="7"
+                            placeholder="{{ translations['system.cookie_placeholder'] }}"
+                            autocomplete="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                        ></textarea>
+                    </label>
+
+                    <p id="cookie-feedback" class="form-feedback" role="status" hidden></p>
+
+                    <button id="save-cookie" class="primary-action" type="button">
+                        {{ translations['system.save_and_check'] }}
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>
