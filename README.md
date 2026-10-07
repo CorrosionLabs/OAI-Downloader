@@ -1,5 +1,7 @@
 # OAI-Downloader
-
+<p align="center">
+  <img src="web/static/img/cabe_github.jpg" alt="OAI-Downloader" width="100%">
+</p>
 OAI-Downloader is a local application for downloading, organizing and inspecting OpenAI / ChatGPT backup data.
 
 It runs locally on your computer and provides a simple web-based interface for connecting to ChatGPT, analyzing available conversations and projects, generating an inventory and downloading backup resources.
