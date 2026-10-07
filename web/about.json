@@ -1,7 +1,8 @@
 {
-  "repository": null,
+  "repository": "https://github.com/CorrosionLabs/OAI-Downloader",
   "release_api_url": null,
   "website": null,
   "contact": null,
-  "license": null
+  "license": null,
+  "tutorial": "https://youtu.be/PLQ9iah44tk?si=TBn0L7Pc_YNBlxJr"
 }

@@ -67,7 +67,6 @@
                         <button id="about-close" class="about-close" type="button" aria-label="{{ translations['about.close'] }}">×</button>
                     </header>
                     <p id="about-modal-description">{{ translations['about.description'] }}</p>
-                    <p class="about-modal-lab">Corrosion Labs</p>
                     {% if about.license %}
                     <p><strong>{{ translations['about.license'] }}</strong> {{ about.license }}</p>
                     {% endif %}
@@ -76,6 +75,9 @@
                     {% endif %}
                     {% if about.repository %}
                     <p><a href="{{ about.repository }}" target="_blank" rel="noopener noreferrer">{{ translations['about.repository'] }}</a></p>
+                    {% endif %}
+                    {% if about.tutorial %}
+                    <p><a href="{{ about.tutorial }}" target="_blank" rel="noopener noreferrer">YouTube tutorial</a></p>
                     {% endif %}
                     {% if about.release_api_url %}
                     <div class="about-updates">
@@ -87,6 +89,7 @@
                     {% if about.contact %}
                     <p><strong>{{ translations['about.contact'] }}</strong> {{ about.contact }}</p>
                     {% endif %}
+                    <p class="about-modal-lab">Corrosion Labs</p>
                 </div>
             </div>
         </section>

@@ -903,7 +903,13 @@ main {
 
 .about-modal-header h2 { margin-bottom: .15rem; }
 .about-modal-header p { margin: 0; color: var(--muted); font-size: var(--small-text-size); }
-.about-modal-lab { font-weight: 700; }
+.about-modal-lab {
+    margin-top: 1.25rem !important;
+    color: var(--muted);
+    font-size: .72rem;
+    font-weight: 400;
+    text-align: right;
+}
 
 .about-modal-logo {
     display: block;
