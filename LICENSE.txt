@@ -1,0 +1,71 @@
+# CORROSION LABS
+
+## Source-Available Non-Commercial License
+
+**Application:** [OAI-DOWNLOADER]  
+**Copyright © 2026 Corrosion Labs. All rights reserved.**
+
+### 1. Permissions
+
+This software is distributed free of charge by Corrosion Labs.
+
+You are permitted to:
+
+- Download and use the software free of charge.
+    
+- View, study, and modify its source code.
+    
+- Copy, adapt, and reuse portions of the source code in non-commercial projects.
+    
+- Redistribute the original software or modified versions for non-commercial purposes.
+    
+
+### 2. Attribution
+
+If you copy, modify, redistribute, or incorporate any substantial portion of this software into another project, you must:
+
+- Clearly acknowledge **Corrosion Labs** as the original source.
+    
+- Include a visible reference to [https://corrosionlabs.github.io/](https://corrosionlabs.github.io/).
+    
+- Preserve the original copyright notices and this license in redistributed source code.
+    
+- Indicate when modifications have been made.
+    
+- Not imply that Corrosion Labs endorses or maintains your modified version.
+    
+
+Attribution must be included in the project's documentation, README, or equivalent credits section.
+
+### 3. Commercial Restrictions
+
+Commercial exploitation of this software or substantial portions of its source code requires prior written permission from Corrosion Labs.
+
+This includes selling the software, incorporating it into paid products or services, or redistributing modified versions for commercial gain.
+
+### 4. Third-Party Components
+
+Third-party components remain subject to their respective licenses.
+
+This license applies only to material for which the copyright holder has the authority to grant these permissions.
+
+### 5. Warranty and Liability
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER SHALL NOT BE LIABLE FOR DAMAGES ARISING FROM ITS USE.
+
+Nothing in this license limits rights or liabilities that cannot legally be excluded.
+
+### 6. Applicable Law
+
+This license is governed by Spanish law, without prejudice to any mandatory provisions of applicable law.
+
+All rights not expressly granted are reserved.
+
+---
+
+**Corrosion Labs**  
+[https://corrosionlabs.github.io/](https://corrosionlabs.github.io/)
+
+_Free Software · Source Available · Non-Commercial Use · Attribution Required_
