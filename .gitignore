@@ -1,8 +1,17 @@
 __pycache__/
 *.py[cod]
 .venv/
-.web/
 .secrets/
 web-test-*.log
 desktop.ini
 .vscode/
+tools/
+GRAFICA/
+estructura.txt
+Generar arbol de archivos.bat
+build_exe.py
+clean_exe.py
+.web
+build/
+dist/
+*.spec

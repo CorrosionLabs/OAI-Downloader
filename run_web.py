@@ -41,7 +41,7 @@ def main():
 
     app.state.webview_window = webview.create_window("OAI-Downloader", url, width=1280, height=800)
     app.state.webview_url = url
-    icon_path = Path(__file__).resolve().parent / "DB.ico"
+    icon_path = Path(__file__).resolve().parent / "web" / "static" / "img" / "DB.ico"
     try:
         webview.start(icon=str(icon_path))
     finally:

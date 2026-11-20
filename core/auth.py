@@ -5,28 +5,21 @@ from typing import Any
 from .config import BASE_URL, SESSION_ENDPOINT
 from .errors import AuthenticationDownloadError, BackupCLIError, GlobalAuthenticationAbort
 from .http import request_json
-from .paths import get_cookie_file
 from .session_log import log_event
 
 
+_session_cookie: str | None = None
+
+
+def set_cookie(value: str) -> None:
+    global _session_cookie
+    _session_cookie = value
+
+
 def load_cookie() -> str:
-    cookie_file = get_cookie_file()
-    if not cookie_file.exists():
-        raise BackupCLIError(
-            "No existe core/.secrets/cookies.txt\n\n"
-            "Guarda en core/.secrets/cookies.txt el valor completo "
-            "del header Cookie de una petición autenticada de chatgpt.com."
-        )
-
-    raw = cookie_file.read_text(encoding="utf-8").strip()
-
-    if raw.lower().startswith("cookie:"):
-        raw = raw.split(":", 1)[1].strip()
-
-    if not raw:
-        raise BackupCLIError("El archivo core/.secrets/cookies.txt está vacío.")
-
-    return raw
+    if not _session_cookie:
+        raise BackupCLIError("No hay una sesión autenticada activa.")
+    return _session_cookie
 
 
 def get_session(cookie: str) -> tuple[str, dict[str, Any]]:

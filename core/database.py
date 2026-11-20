@@ -806,7 +806,7 @@ def _remote_timestamp_after(remote_updated_at: str | None, previous_updated_at: 
         return False
 
 
-def classify_remote_conversations(remote_records: list[dict[str, Any]]) -> dict[str, int]:
+def classify_remote_conversations(remote_records: list[dict[str, Any]]) -> dict[str, Any]:
     records: dict[str, dict[str, Any]] = {}
     for record in remote_records:
         if not isinstance(record, dict):
@@ -816,6 +816,8 @@ def classify_remote_conversations(remote_records: list[dict[str, Any]]) -> dict[
             records[conversation_id] = record
 
     counts = {status: 0 for status in CONVERSATION_DOWNLOAD_STATUSES}
+    by_project: dict[str, dict[str, int]] = {}
+    root_counts = {status: 0 for status in CONVERSATION_DOWNLOAD_STATUSES}
     seen_at = datetime.now(timezone.utc).isoformat()
     connection = connect_database()
     try:
@@ -888,13 +890,17 @@ def classify_remote_conversations(remote_records: list[dict[str, Any]]) -> dict[
                 (conversation_id, project_id, title, remote_updated_at, status, seen_at),
             )
             counts[status] += 1
+            scope_counts = (by_project.setdefault(
+                project_id, {value: 0 for value in CONVERSATION_DOWNLOAD_STATUSES}
+            ) if project_id is not None else root_counts)
+            scope_counts[status] += 1
         connection.commit()
     except Exception:
         connection.rollback()
         raise
     finally:
         connection.close()
-    return counts
+    return {**counts, "by_project": by_project, "root": root_counts}
 
 
 def get_conversations_by_status(status: str) -> list[dict[str, Any]]:

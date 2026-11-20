@@ -364,8 +364,8 @@ function renderSession(data) {
     workflowState.sessionChecking = false;
     workflowState.connected = connected;
     const status = $("#system-status");
-    status.textContent = connected ? t("system.connected") :
-        (data.cookie_found ? t("system.invalid_session") : t("system.no_credentials"));
+    setIndicatorText(status, connected ? t("system.connected") :
+        (data.cookie_found ? t("system.invalid_session") : t("system.no_credentials")));
     status.dataset.state = connected ? "complete" : "pending";
     for (const [field, id] of [["name", "user"], ["email", "email"]]) {
         const value = data.user?.[field] || "";
@@ -379,7 +379,7 @@ function renderSession(data) {
 
 async function loadSession() {
     workflowState.sessionChecking = true;
-    $("#system-status").textContent = t("system.checking");
+    setIndicatorText($("#system-status"), t("system.checking"), true);
     $("#system-status").dataset.state = "working";
     updateNavigationStates();
     try {
@@ -577,6 +577,25 @@ $("#backup-results").addEventListener("change", (event) => {
     syncAnalysisScope();
 });
 
+function appendConversationStatus(element, status) {
+    if (!status) return;
+    const language = document.documentElement.lang.split("-")[0];
+    const labels = {
+        es: ["Nuevas", "Modificadas", "Sin cambios", "Fallidas"],
+        en: ["New", "Modified", "Unchanged", "Failed"],
+        fr: ["Nouvelles", "Modifiées", "Inchangées", "Échecs"],
+    }[language] || ["New", "Modified", "Unchanged", "Failed"];
+    const details = document.createElement("span");
+    details.className = "conversation-status";
+    ["pending", "modified", "downloaded", "failed"].forEach((key, index) => {
+        const item = document.createElement("span");
+        item.className = `conversation-status-${key}`;
+        item.textContent = `${labels[index]}: ${status[key] ?? 0}`;
+        details.append(item);
+    });
+    element.append(details);
+}
+
 function renderBackup(result) {
     if (!result) return;
     workflowState.analysis = result;
@@ -604,6 +623,7 @@ function renderBackup(result) {
     rootLabel.append(rootCheckbox, document.createTextNode(` ${$("#backup-project-list").dataset.rootLabel}`));
     rootName.append(rootLabel);
     rootCount.textContent = `${rootCheckbox.dataset.conversationCount} ${t("backup.conversations")}`;
+    appendConversationStatus(rootCount, result.root_conversation_status);
     rootRow.append(rootName, rootCount);
     $("#backup-project-list").append(rootRow);
     for (const project of result.projects || []) {
@@ -621,6 +641,7 @@ function renderBackup(result) {
         label.append(checkbox, document.createTextNode(` ${project.name}`));
         name.append(label);
         count.textContent = `${project.conversation_count} ${t("backup.conversations")}`;
+        appendConversationStatus(count, project.conversation_status);
         row.append(name, count);
         $("#backup-project-list").append(row);
     }
@@ -667,9 +688,11 @@ function renderDownloadWorker(row, worker) {
         $("#download-worker-list").dataset.completedWithIncidents :
         completed ? t("common.completed") :
         worker.status === "error" ? "Error" : t(`phase.${worker.phase}`);
-    const title = document.createElement("h3");
-    title.textContent = `${t("download.thread")} ${worker.worker_id}`;
-    row.append(title);
+    if (!row.firstChild) {
+        const title = document.createElement("h3");
+        title.textContent = `${t("download.thread")} ${worker.worker_id}`;
+        row.append(title);
+    }
 
     const details = [
         [t("download.project"), worker.current_project || t("download.root")],
@@ -677,30 +700,44 @@ function renderDownloadWorker(row, worker) {
         [t("download.progress"), `${current} / ${validTotal ? total : "-"}`],
         [t("common.status"), status],
     ];
-    if (unavailable > 0) {
-        details.push([$("#download-worker-list").dataset.unavailableLabel, unavailable]);
-    }
-    for (const [label, detail] of details) {
-        const field = document.createElement("p");
-        if (label === $("#download-worker-list").dataset.unavailableLabel) {
-            field.className = "download-unavailable";
+    details.forEach(([label, detail], index) => {
+        let field = row.querySelector(`[data-worker-field="${index}"]`);
+        if (!field) {
+            field = document.createElement("p");
+            field.dataset.workerField = index;
+            const name = document.createElement("strong");
+            name.textContent = `${label}: `;
+            const text = document.createElement("span");
+            field.append(name, text);
+            row.append(field);
         }
+        setIndicatorText(field.lastChild, detail, true, true);
+    });
+    row.querySelector(".download-unavailable")?.remove();
+    if (unavailable > 0) {
+        const field = document.createElement("p");
+        field.className = "download-unavailable";
         const name = document.createElement("strong");
-        name.textContent = `${label}: `;
-        field.append(name, document.createTextNode(detail));
-        row.append(field);
+        name.textContent = `${$("#download-worker-list").dataset.unavailableLabel}: `;
+        field.append(name, document.createTextNode(String(unavailable)));
+        row.querySelector("progress")?.before(field);
+        if (!field.isConnected) row.append(field);
     }
 
-    const progress = document.createElement("progress");
-    progress.className = "download-worker-progress";
-    progress.setAttribute("aria-label", `${t("download.thread")} ${worker.worker_id}`);
+    let progress = row.querySelector("progress");
+    if (!progress) {
+        progress = document.createElement("progress");
+        progress.className = "download-worker-progress";
+        progress.setAttribute("aria-label", `${t("download.thread")} ${worker.worker_id}`);
+        row.append(progress);
+    }
+    progress.classList.toggle("is-indeterminate", !validTotal);
     if (validTotal) {
         progress.max = total;
         progress.value = value;
     } else {
-        progress.classList.add("is-indeterminate");
+        progress.removeAttribute("value");
     }
-    row.append(progress);
 }
 
 function renderProcessProgress(prefix, current, total) {
@@ -719,6 +756,48 @@ function renderProcessProgress(prefix, current, total) {
     }
 }
 
+// Revela cada mensaje sin cambiar la posición de los caracteres durante la animación.
+const typewriterStates = new WeakMap();
+
+function setIndicatorText(element, value, animate = false, once = false) {
+    const text = String(value ?? "");
+    const previous = typewriterStates.get(element);
+    if (previous?.text === text && previous.animate === animate && previous.once === once) return;
+    if (previous?.timer) clearTimeout(previous.timer);
+
+    if (!animate || !text || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        element.textContent = text;
+        typewriterStates.set(element, {text, animate, once});
+        return;
+    }
+
+    // Cada letra reserva su espacio desde el primer fotograma.
+    const letters = Array.from(text, (character) => {
+        const span = document.createElement("span");
+        span.textContent = character;
+        span.style.visibility = "hidden";
+        return span;
+    });
+    const line = document.createElement("span");
+    line.append(...letters);
+    element.replaceChildren(line);
+    let position = 0;
+    const state = {text, animate, once, timer: null};
+    function writeNext() {
+        if (typewriterStates.get(element) !== state) return;
+        if (position === letters.length) {
+            if (once) return;
+            letters.forEach((letter) => { letter.style.visibility = "hidden"; });
+            position = 0;
+        } else {
+            letters[position++].style.visibility = "visible";
+        }
+        state.timer = setTimeout(writeNext, position === letters.length ? 1000 : 35);
+    }
+    typewriterStates.set(element, state);
+    state.timer = setTimeout(writeNext, 35);
+}
+
 function renderJob(job) {
     if (job.kind === "download") {
         const running = job.status === "running";
@@ -726,11 +805,11 @@ function renderJob(job) {
         $("#stop-download").disabled = Boolean(job.stop_requested);
         $("#download-status").dataset.state = running ? "working" :
             (["error", "partial"].includes(job.status) ? "error" : "complete");
-        $("#download-progress-word").textContent = running ? t(`phase.${job.phase}`) :
+        setIndicatorText($("#download-progress-word"), running ? t(`phase.${job.phase}`) :
             job.status === "error" ? errorText(job.error) :
             job.result?.stopped_by_user ? "Detenida por el usuario" :
             job.result?.aborted ? t("download.aborted") :
-            job.status === "partial" ? t("common.partial") : t("common.completed");
+            job.status === "partial" ? t("common.partial") : t("common.completed"), running);
         $("#download-project").textContent = job.current_project === null ?
             t("download.root") : job.current_project || "—";
         $("#download-resource").textContent = job.current_resource || "—";
@@ -741,12 +820,17 @@ function renderJob(job) {
         const hasWorkerStatus = activeWorkers.length > 0;
         $("#download-current-status").hidden = hasWorkerStatus;
         $("#download-status").hidden = hasWorkerStatus;
-        $("#download-worker-list").replaceChildren();
+        const workerList = $("#download-worker-list");
+        const existingRows = new Map([...workerList.querySelectorAll("[data-worker-id]")]
+            .map((row) => [row.dataset.workerId, row]));
+        workerList.replaceChildren();
         for (const worker of activeWorkers) {
-            const row = document.createElement("li");
+            const id = String(worker.worker_id);
+            const row = existingRows.get(id) || document.createElement("li");
+            row.dataset.workerId = id;
             row.className = "download-worker-status";
             renderDownloadWorker(row, worker);
-            $("#download-worker-list").append(row);
+            workerList.append(row);
         }
         for (const error of job.result?.errors || []) {
             const row = document.createElement("li");
@@ -765,11 +849,11 @@ function renderJob(job) {
     }
     if (job.kind === "connection") {
         if (job.status === "running") {
-            $("#system-status").textContent = t("system.waiting_browser_login");
+            setIndicatorText($("#system-status"), t("system.waiting_browser_login"), true);
             $("#system-status").dataset.state = "working";
         } else if (job.result) renderSession(job.result);
         else if (job.error) {
-            $("#system-status").textContent = errorText(job.error);
+            setIndicatorText($("#system-status"), errorText(job.error));
             $("#system-status").dataset.state = "error";
             $("#manual-cookie").hidden = false;
         }
@@ -788,16 +872,16 @@ function renderJob(job) {
     status.dataset.state = job.status === "running" ? "working" :
         (["error", "partial"].includes(job.status) ? "error" : "complete");
     if (job.status === "running") {
-        word.textContent = t(`phase.${job.phase}`);
-        detail.textContent = [job.current_project, job.total ? `${job.current} / ${job.total}` : ""]
-            .filter(Boolean).join(" · ");
+        setIndicatorText(word, t(`phase.${job.phase}`), true);
+        setIndicatorText(detail, [job.current_project, job.total ? `${job.current} / ${job.total}` : ""]
+            .filter(Boolean).join(" · "), true);
         if (Number(job.total) > 0) {
             renderProcessProgress(prefix, job.current, job.total);
         }
     } else {
-        word.textContent = job.status === "error" ? errorText(job.error) :
-            job.status === "partial" ? t("common.partial") : t("common.completed");
-        detail.textContent = "";
+        setIndicatorText(word, job.status === "error" ? errorText(job.error) :
+            job.status === "partial" ? t("common.partial") : t("common.completed"));
+        setIndicatorText(detail, "");
     }
     if (job.result) (prefix === "backup" ? renderBackup : renderInventory)(job.result);
     updateNavigationStates();

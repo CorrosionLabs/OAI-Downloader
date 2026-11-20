@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import re
+import sys
 
 
 APP_ROOT = Path(__file__).resolve().parent.parent
+
+LOCAL_DATA_DIR = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "OAI-Downloader"
 
 DATA_ROOT = Path.home() / "OAI-Downloader"
 
@@ -30,7 +34,17 @@ def get_data_root() -> Path:
 
 
 def get_cookie_file() -> Path:
-    return Path(__file__).resolve().parent / ".secrets" / "cookies.txt"
+    return LOCAL_DATA_DIR / ".secrets" / "cookies.txt"
+
+
+def get_settings_file() -> Path:
+    if sys.platform == "win32":
+        config_dir = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    elif sys.platform == "darwin":
+        config_dir = Path.home() / "Library" / "Application Support"
+    else:
+        config_dir = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config").expanduser()
+    return config_dir / "OAI-Downloader" / "settings.json"
 
 
 def get_backup_dir() -> Path:

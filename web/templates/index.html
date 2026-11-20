@@ -77,7 +77,7 @@
                     <p><a href="{{ about.repository }}" target="_blank" rel="noopener noreferrer">{{ translations['about.repository'] }}</a></p>
                     {% endif %}
                     {% if about.tutorial %}
-                    <p><a href="{{ about.tutorial }}" target="_blank" rel="noopener noreferrer">YouTube tutorial</a></p>
+                    <p><a href="{{ about.tutorial }}" target="_blank" rel="noopener noreferrer">{{ "Manual de usuario" if language == "es" else "Manuel d’utilisation" if language == "fr" else "User manual" }}</a></p>
                     {% endif %}
                     {% if about.release_api_url %}
                     <div class="about-updates">
@@ -89,7 +89,7 @@
                     {% if about.contact %}
                     <p><strong>{{ translations['about.contact'] }}</strong> {{ about.contact }}</p>
                     {% endif %}
-                    <p class="about-modal-lab">Corrosion Labs</p>
+                    <p class="about-modal-lab"><a href="https://corrosionlabs.github.io/tools/" target="_blank" rel="noopener noreferrer" aria-label="Corrosion Labs · Tools"><img src="/static/img/marca_negra.svg" alt="Corrosion Labs" width="120" height="auto"></a></p>
                 </div>
             </div>
         </section>

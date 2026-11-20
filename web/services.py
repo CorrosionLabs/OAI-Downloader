@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from core import auth, conversations, database, inventory, local_data, projects, resources
-from core.errors import GlobalAuthenticationAbort
+from core.errors import BackupCLIError, GlobalAuthenticationAbort
 from core.config import (
     AUTO_SAFE_MODE_DEFAULT,
     AUTO_SAFE_MODE_TRANSIENT_FAILURE_THRESHOLD,
@@ -22,7 +22,7 @@ from core.config import (
     RESOURCE_DELAY_SECONDS,
     VERSION,
 )
-from core.paths import get_backup_dir, get_backup_paths, get_cookie_file, safe_folder_name
+from core.paths import get_backup_dir, get_backup_paths, safe_folder_name
 from core.session_log import log_event
 from core.state import save_json
 from web.jobs import WebError
@@ -73,12 +73,14 @@ def public_user(session: dict) -> dict:
 
 
 def session_status() -> dict:
-    found = get_cookie_file().is_file()
-    result = {"cookie_found": found, "authenticated": False, "user": None, "error": None}
-    if not found:
-        return result
+    result = {"cookie_found": False, "authenticated": False, "user": None, "error": None}
     try:
-        _, session = auth.get_session(auth.load_cookie())
+        cookie = auth.load_cookie()
+    except BackupCLIError:
+        return result
+    result["cookie_found"] = True
+    try:
+        _, session = auth.get_session(cookie)
         result.update(authenticated=True, user=public_user(session))
     except Exception as exc:
         if auth.is_global_authentication_error(exc):
@@ -96,14 +98,7 @@ def save_cookie(value: str) -> dict:
         _, session = auth.get_session(value)
     except Exception as exc:
         raise WebError("invalid_session") from exc
-    path = get_cookie_file()
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(".tmp")
-        temporary.write_text(value, encoding="utf-8")
-        temporary.replace(path)
-    except OSError as exc:
-        raise WebError("cookie_save_failed") from exc
+    auth.set_cookie(value)
     return {"saved": True, "cookie_found": True, "authenticated": True,
             "user": public_user(session), "error": None}
 
@@ -178,6 +173,11 @@ def list_account_projects(progress, request_delay: float | None = None) -> dict:
             on_conversation_items=on_conversation_items,
         )
         conversation_status = database.classify_remote_conversations(remote_records)
+        for project in summary.get("projects", []):
+            project["conversation_status"] = conversation_status["by_project"].get(
+                str(project["id"]), {status: 0 for status in database.CONVERSATION_DOWNLOAD_STATUSES}
+            )
+        summary["root_conversation_status"] = conversation_status["root"]
         summary.update({
             "conversations_pending": conversation_status["pending"],
             "conversations_modified": conversation_status["modified"],

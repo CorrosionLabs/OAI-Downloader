@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from core.config import AUTO_SAFE_MODE_DEFAULT, SAFE_MODE_DEFAULT, VERSION
+from core.paths import get_settings_file
 from web import services
 from web.jobs import JobManager, WebError
 from web.settings import Settings
@@ -73,7 +74,7 @@ class DownloadPayload(InventoryPayload):
 
 
 def create_app(settings_file: Path | None = None) -> FastAPI:
-    settings = Settings(settings_file or WEB_ROOT.parent / ".web" / "settings.json")
+    settings = Settings(settings_file or get_settings_file())
     jobs = JobManager()
 
     @asynccontextmanager
@@ -141,7 +142,9 @@ def create_app(settings_file: Path | None = None) -> FastAPI:
         with jobs.exclusive():
             try:
                 result = subprocess.run(
-                    [sys.executable, "-m", "web.folder_picker", settings.status()["storage_root"]],
+                    ([sys.executable, "--folder-picker", settings.status()["storage_root"]]
+                     if getattr(sys, "frozen", False) else
+                     [sys.executable, "-m", "web.folder_picker", settings.status()["storage_root"]]),
                     cwd=WEB_ROOT.parent, capture_output=True, text=True, check=True,
                     creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
                 )

@@ -9,7 +9,7 @@ from .auth import get_session, load_cookie
 from .config import APP_NAME, BASE_URL, VERSION
 from .errors import BackupCLIError
 from .http import build_url, request_post
-from .paths import get_backup_dir, get_backup_paths
+from .paths import get_backup_dir
 from .resources import resolve_library_to_file_id
 
 

@@ -1,3 +1,4 @@
+/* Fuentes locales utilizadas por la interfaz. */
 @font-face {
     font-family: "BloggerSans-Bold";
     src: url("/static/fonts/BloggerSans-Bold.ttf") format("truetype");
@@ -6,21 +7,22 @@
 }
 
 @font-face {
-    font-family: "BloggerSans-Light";
-    src: url("/static/fonts/BloggerSans-Light.ttf") format("truetype");
-    font-weight: 300;
+    font-family: "BloggerSans";
+    src: url("/static/fonts/BloggerSans.ttf") format("truetype");
+    font-weight: 400;
     font-style: normal;
 }
 
+/* Variables globales: colores, tamaños, radios, sombras y animaciones. */
 :root {
-    --font-family: "BloggerSans-Light", monospace;
+    --font-family: "BloggerSans", sans-serif;
     --control-radius: 6px;
     --control-hover-background: #e9edf2;
-    --small-text-size: .875rem;
+    --small-text-size: 1rem;
     /* Preferencia de esquema de color del navegador. */
     color-scheme: light;
     /* Fondo general de la aplicación. */
-    --background: #f6f7f8;
+    --background: #c1c1c1;
     /* Fondo de paneles, menús y globos. */
     --surface: #fff;
     /* Color de texto principal. */
@@ -40,11 +42,11 @@
     /* Color de acciones destructivas y errores. */
     --danger: #e60909;
     /* Radio de borde general de paneles. */
-    --radius: 8px;
+    --radius: 0px 0px 8px 8px;
     /* Sombras de profundidad de la interfaz. */
     --shadow-header: 0 .35rem .85rem rgb(32 33 36 / .22);
-    --shadow-panel: 0 .25rem .7rem rgb(32 33 36 / .10);
-    --shadow-modal: 0 .9rem 2rem rgb(32 33 36 / .24);
+    --shadow-panel: 0 .25rem 1.20rem rgba(32, 33, 36, 0.74);
+    --shadow-modal: 0 .9rem 2rem rgba(32, 33, 36, 0.603);
 
     /* Color fijo de borde y línea de unión del menú. */
     --menu-control-border-color: #b62a2a;
@@ -53,7 +55,7 @@
     /* Espacio horizontal entre botones del menú. */
     --menu-link-gap: .85rem;
     /* Radio de borde de botones del menú. */
-    --menu-link-radius: 4px;
+    --menu-link-radius: 0px;
     /* Color de texto de todos los botones del menú. */
     --menu-button-text-color: #000;
     /* Fondo normal de un botón del menú. */
@@ -87,6 +89,7 @@
     font-family: var(--font-family);
 }
 
+/* Reglas básicas y estilos globales de la página. */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { background: var(--background); }
@@ -100,13 +103,14 @@ body {
     overflow: hidden;
     color: var(--text);
     background: var(--background);
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.5;
 }
 
 a { color: var(--accent); }
 button, input, textarea { font: inherit; }
 
+/* Cabecera superior: fondo, bordes y estilos comunes. */
 .site-header {
     flex: 0 0 auto;
     width: 100%;
@@ -119,6 +123,7 @@ button, input, textarea { font: inherit; }
     --menu-button-background-hover: #242424;
 }
 
+/* Distribución y separación del contenido de la cabecera. */
 .site-header-content {
     display: flex;
     align-items: center;
@@ -129,16 +134,17 @@ button, input, textarea { font: inherit; }
     padding-block: 1.25rem;
 }
 
+/* Identidad de la aplicación: logotipo, título y subtítulo. */
 .brand { display: flex; align-items: center; gap: .75rem; }
 .brand-logo {
-    width: 1.85rem;
-    height: 1.85rem;
+    width: 3.0rem;
+    height: 3.0rem;
     object-fit: contain;
     flex: 0 0 auto;
 }
 .brand-copy { display: flex; flex-direction: column; }
-.brand-product { font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
-.brand-subtitle { color: #fff; font-size: .7rem; line-height: 1.2; }
+.brand-product { font-size: 1.8rem; font-weight: 700; line-height: 1.2; }
+.brand-subtitle { color: #fff; font-size: 1.0rem; line-height: 1.2; }
 
 .header-actions,
 .main-nav,
@@ -151,14 +157,16 @@ button, input, textarea { font: inherit; }
     gap: .75rem;
 }
 
+/* Botones de navegación y selector de idioma: espacio interior y tipografía. */
 .main-nav a,
 .language-menu-toggle {
-    padding: .45rem .7rem;
+    padding: .80rem .7rem;
     color: var(--muted);
-    font-size: var(--small-text-size);
+    font-size: 1.1rem;
     text-decoration: none;
 }
 
+/* Distribución horizontal de los botones del menú. */
 .main-nav {
     gap: var(--menu-link-gap);
     isolation: isolate;
@@ -172,17 +180,19 @@ button, input, textarea { font: inherit; }
     transition: color .18s ease, background-color .18s ease, opacity .18s ease;
 }
 
+/* Franjas inferiores del menú: posición, grosor y color de estado. */
 .main-nav a::before,
 .site-header :is(.language-menu-toggle, .live-help-toggle, .about-logo)::before {
     position: absolute;
     right: 0;
     bottom: 0;
     left: 0;
-    height: 3px;
+    height: 8px;
     background: var(--navigation-strip-color);
     border-radius: 0 0 var(--menu-link-radius) var(--menu-link-radius);
     content: "";
     pointer-events: none;
+    transition: background-color .6s ease;
 }
 
 .main-nav a:not(:is(.state-locked, .state-running, .state-complete, .state-warning, .state-error)):is(:hover, :focus-visible, [aria-current="page"]) {
@@ -197,6 +207,7 @@ button, input, textarea { font: inherit; }
     background: var(--control-hover-background);
 }
 
+/* Estados del menú: bloqueado, en proceso, completado y error. */
 .main-nav a.state-locked {
     --navigation-strip-color: var(--menu-control-border-color);
     cursor: not-allowed;
@@ -217,9 +228,11 @@ button, input, textarea { font: inherit; }
     50% { opacity: 1; }
 }
 
+/* Selector de idioma y menú desplegable. */
 .language-menu { position: relative; }
 
 .language-menu-toggle,
+/* Botones de ayuda (?), logotipo circular y cierre: tamaño y alineación. */
 .live-help-toggle,
 .about-logo {
     position: relative;
@@ -297,6 +310,13 @@ button, input, textarea { font: inherit; }
     background: var(--control-hover-background);
 }
 
+/* Colores y comportamiento de los controles dentro de la cabecera negra. */
+/* Espacio vertical en ayuda y logo circular para separar el icono de la franja inferior. */
+.site-header .live-help-toggle,
+.site-header .about-logo {
+    height: 3.0rem;
+}
+
 .site-header .brand-product { color: #fff; }
 .site-header .brand-logo,
 .site-header .about-logo img { filter: invert(1); }
@@ -321,6 +341,7 @@ button, input, textarea { font: inherit; }
 .site-header .language-menu-options a { color: #fff; }
 .site-header .language-menu-options a:is(:hover, :focus-visible, [aria-current="true"]) { background: #242424; }
 
+/* Globo de ayuda contextual. */
 .live-help-bubble {
     position: fixed;
     z-index: 1000;
@@ -345,11 +366,13 @@ button, input, textarea { font: inherit; }
     transform: translateY(0);
 }
 
+/* Área principal desplazable; sus márgenes permiten ver la sombra de los paneles. */
 main {
     flex: 1;
     min-height: 0;
     width: min(var(--content-width), calc(100% - 2rem));
     margin-inline: auto;
+    padding-inline: 1rem;
     padding-bottom: 3rem;
     overflow-x: hidden;
     overflow-y: auto;
@@ -359,6 +382,7 @@ main {
 
 .panel-summary, .manual-help { color: var(--muted); }
 
+/* Paneles de cada módulo: dimensiones, fondo, borde, radios y sombra. */
 .panel {
     position: relative;
     width: 100%;
@@ -378,6 +402,7 @@ main {
 }
 .panel-summary { margin: 0; }
 
+/* Entrada animada de los módulos al cambiar de sección. */
 @keyframes module-drop-in {
     from { opacity: 0; transform: translateY(var(--module-enter-offset-y)); }
     to { opacity: 1; transform: translateY(0); }
@@ -385,6 +410,7 @@ main {
 
 .module-panel.is-entering { animation: module-drop-in var(--module-enter-duration) ease-out; }
 
+/* Indicadores de estado y alineación de sus textos. */
 .status {
     display: flex;
     align-items: flex-start;
@@ -403,6 +429,7 @@ main {
     border-top: 0;
 }
 
+/* Anchura común de las barras de progreso. */
 .module-process-progress,
 .process-progress progress,
 .download-worker-progress,
@@ -445,6 +472,27 @@ main {
 .status[data-state="ready"] { --status-color: var(--success); }
 :is(.status, #system-status)[data-state="error"] { --status-color: var(--danger); }
 
+/* Parpadeo exclusivo de los mensajes que esperan su ejecución. */
+/* Parpadeo del texto mientras el proceso está pendiente. */
+@keyframes indicator-pending-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .2; }
+}
+
+:is(#backup-status, #inventory-status, #download-status)[data-state="pending"]
+:is(#backup-progress-word, #inventory-progress-word, #download-progress-word),
+#system-status[data-state="pending"] {
+    animation: indicator-pending-blink 1.2s ease-in-out infinite;
+}
+
+/* Preferencia del sistema: reducir animaciones. */
+@media (prefers-reduced-motion: reduce) {
+    :is(#backup-status, #inventory-status, #download-status)[data-state="pending"]
+    :is(#backup-progress-word, #inventory-progress-word, #download-progress-word),
+    #system-status[data-state="pending"] { animation: none; }
+}
+
+/* Botones de acción principales y sus estados. */
 .primary-action {
     min-height: 2.5rem;
     padding: .6rem .9rem;
@@ -484,6 +532,18 @@ main {
     right: clamp(1.25rem, 3vw, 2rem);
     min-width: 6.5rem;
 }
+
+/* Parpadeo del borde de los botones Siguiente habilitados */
+@keyframes next-button-pulse {
+    0%, 100% { border-color: transparent; }
+    50% { border-color: #ffffff; }
+}
+
+.section-next-action:not(:disabled) {
+    border: 4px solid transparent;
+    animation: next-button-pulse 1.2s ease-in-out infinite;
+}
+
 .section-next-action:disabled { cursor: not-allowed; }
 .diagnostic-action { background: var(--warning); border-color: var(--warning); }
 .diagnostic-action:hover { background: #854d0e; border-color: #854d0e; }
@@ -493,6 +553,7 @@ main {
     outline-offset: 2px;
 }
 
+/* Resumen del análisis: distribución y métricas. */
 .backup-summary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -526,6 +587,7 @@ main {
     cursor: pointer;
 }
 
+/* Selección de proyectos y conversaciones para procesar. */
 #analysis-scope-options {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -615,6 +677,27 @@ main {
 #backup-project-list .root-scope input[type="checkbox"] { accent-color: var(--success); }
 #backup-project-list .root-scope label:has(input:checked) { color: var(--success); }
 
+/* Recuentos de conversaciones bajo el nombre del proyecto. */
+#backup-project-list > div { padding-block: .65rem; border-bottom: 1px solid var(--border); }
+#backup-project-list dd { margin: 0 0 0 1.7rem; font-size: var(--small-text-size); }
+#backup-project-list .conversation-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .15rem .8rem;
+    font-size: .8rem;
+    font-weight: 400;
+}
+#backup-project-list .conversation-status > span {
+    padding: .12rem .4rem;
+    border-radius: var(--control-radius);
+    color: var(--text);
+}
+.conversation-status-pending { background: #dcfce7; }
+.conversation-status-modified { background: #ffedd5; }
+.conversation-status-downloaded { background: #dbeafe; }
+.conversation-status-failed { background: #fee2e2; }
+
+/* Resultados y resúmenes del inventario. */
 .inventory-results { margin-top: 1.25rem; }
 .inventory-result-block + .inventory-result-block {
     margin-top: .9rem;
@@ -639,6 +722,7 @@ main {
 .inventory-summary span + span::before { color: var(--border); content: "·"; margin-right: .45rem; }
 .inventory-summary strong { color: var(--text); font-size: 1.1rem; }
 
+/* Diagnósticos e incidencias de descarga. */
 #download-diagnostics {
     margin-top: .85rem;
     padding: .8rem .9rem;
@@ -675,6 +759,7 @@ main {
 .download-diagnosis-field { margin: 0; overflow-wrap: anywhere; font-size: var(--small-text-size); }
 .download-diagnosis-field strong { color: var(--muted); font-weight: 600; }
 
+/* Datos de sistema, conexión y almacenamiento. */
 .system-details { margin-block: 1.5rem; border-top: 1px solid var(--border); }
 .system-details div {
     display: grid;
@@ -703,6 +788,7 @@ main {
 .manual-help { margin: .65rem 0 1rem; font-size: var(--small-text-size); }
 .cookie-guide { padding-left: 1.4rem; color: var(--muted); font-size: .9rem; }
 
+/* Configuración de descarga: campos, modos y controles avanzados. */
 #descarga .download-settings {
     display: grid;
     grid-template-columns: max-content max-content;
@@ -811,6 +897,7 @@ main {
     accent-color: var(--download-total-progress-color);
 }
 
+/* Información y barras de progreso de cada hilo de descarga. */
 .download-worker-status {
     padding-top: .55rem;
     border-top: 1px solid var(--border);
@@ -844,6 +931,7 @@ main {
 .cleanup-action { background: var(--danger); border-color: var(--danger); }
 .cleanup-action:hover { background: #9b2c2c; border-color: #9b2c2c; }
 
+/* Ventanas modales: fondo, panel y botones. */
 .modal {
     position: fixed;
     z-index: 10;
@@ -874,6 +962,7 @@ main {
 .modal-warning { color: var(--danger); font-weight: 600; }
 .modal-preserved { color: var(--muted); font-size: var(--small-text-size); }
 
+/* Ventana Acerca de: distribución, logo e información. */
 .about-modal-dialog {
     width: min(48rem, 100%);
     padding: 2rem;
@@ -962,6 +1051,7 @@ main {
 
 .modal-actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
 
+/* Campos de formularios para conexión y descargas. */
 .cookie-field,
 #descarga .download-field {
     display: grid;
@@ -998,6 +1088,7 @@ main {
     overflow-wrap: anywhere;
 }
 
+/* Ajustes de distribución para pantallas estrechas. */
 @media (max-width: 700px) {
     .site-header-content { align-items: flex-start; flex-direction: column; }
     .header-actions { width: 100%; align-items: flex-start; }
