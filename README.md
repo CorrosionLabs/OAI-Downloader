@@ -21,6 +21,15 @@ Built by **Corrosion Labs**.
 - English, Spanish and French interface
 - Configurable external storage location
 
+## Tutorial
+
+<p align="center">
+  <a href="https://youtu.be/PLQ9iah44tk">
+    <img src="web/static/img/tutorial.jpg" alt="OAI-Downloader tutorial" width="800">
+  </a>
+</p>
+
+
 ## Platform status
 
 ### Windows
